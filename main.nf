@@ -231,4 +231,4 @@ process synapse_index {
 
 
 ch_file_ids
-  .collectFile(name: "file_ids.txt", storeDir: publish_dir, newLine: true)
+  .collectFile(name: "file_ids.csv", storeDir: publish_dir, newLine: true)
