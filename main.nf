@@ -50,7 +50,7 @@ process get_user_id {
   afterScript "rm -f ${syn_config}"
 
   input:
-  file  syn_config  from ch_synapse_config
+  file  syn_config    from ch_synapse_config
 
   output:
   stdout ch_user_id
@@ -81,7 +81,7 @@ process update_owner {
   val bucket    from bucket_name
 
   output:
-  val true into ch_update_owner_done
+  val true    into ch_update_owner_done
 
   script:
   """
@@ -144,7 +144,7 @@ process list_objects {
   val bucket    from bucket_name
 
   output:
-  path 'objects.txt' into ch_objects
+  path 'objects.txt'    into ch_objects
 
   script:
   """
@@ -172,7 +172,7 @@ process synapse_mirror {
   file  syn_config    from ch_synapse_config
 
   output:
-  path  'parents.csv' into ch_parents
+  path  'folder_ids.csv'    into ch_folder_ids_csv
 
   script:
   config_param = params.synapse_config ? "--config ${syn_config}" : ""
@@ -182,17 +182,17 @@ process synapse_mirror {
   --outdir ${outdir} \
   --parent_id ${parent_id} \
   ${config_param} \
-  > parents.csv
+  > folder_ids.csv
   """
 
 }
 
 // Parse list of object URIs and their Synapse parents
-ch_parents
+ch_folder_ids_csv
   .text
   .splitCsv()
-  .map { row -> row[0], file(row[0]), row[1] }
-  .set { ch_parents_split }
+  .map { row -> [ row[0], file(row[0]), row[1] ] }
+  .set { ch_folder_ids }
 
 
 process synapse_index {
@@ -204,9 +204,12 @@ process synapse_index {
   afterScript "rm -f ${syn_config}"
 
   input:
-  tuple val(uri), path(object), val(parent_id)    from ch_parents_split
+  tuple val(uri), file(object), val(parent_id)    from ch_folder_ids
   val   storage_id                                from ch_storage_id
   file  syn_config                                from ch_synapse_config
+
+  output:
+  stdout ch_file_ids
 
   script:
   config_param = params.synapse_config ? "--config ${syn_config}" : ""
@@ -217,6 +220,22 @@ process synapse_index {
   --uri ${uri} \
   --parent_id ${parent_id} \
   ${config_param}
+  """
+
+}
+
+
+process output_file_ids {
+
+  input:
+  val file_ids    from ch_file_ids.collect()
+
+  output:
+  path 'file_ids.csv'     into ch_file_ids_csv
+
+  script:
+  """
+  echo ${file_ids} > file_ids.csv
   """
 
 }

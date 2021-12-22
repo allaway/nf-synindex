@@ -53,9 +53,10 @@ fileHandle = syn.restPOST(
 
 
 # Expose that file handle on Synapse with a File
-f = synapseclient.File(
+file = synapseclient.File(
     name=fileHandle["fileName"],
     parentId=args.parent_id,
     dataFileHandleId=fileHandle["id"],
 )
-f = syn.store(f)
+file = syn.store(file)
+print(f"{args.s3_uri},{file.id}")

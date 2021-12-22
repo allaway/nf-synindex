@@ -42,12 +42,15 @@ with open(args.objects, "r") as infile:
     for line in infile:
         object_uri = line.rstrip()
         head, tail = os.path.split(object_uri)
+        head += "/"  # Keep trailing slash for consistency
         relhead = head.replace(args.outdir, "")
         folder_uri = args.outdir
-        for folder in relhead.split("/"):
+        for folder in relhead.rstrip("/").split("/"):
+            if folder == "":
+                continue
             parent_id = mapping[folder_uri]
             folder_uri += f"{folder}/"
             if folder_uri not in mapping:
                 folder_id = create_folder(folder, parent_id)
                 mapping[folder_uri] = folder_id
-        print(f"{object_uri},{folder_id}")
+        print(f"{object_uri},{mapping[folder_uri]}")
