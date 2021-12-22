@@ -66,7 +66,7 @@ process get_user_id {
   syn.login(silent=True)
 
   user = syn.getUserProfile()
-  print(user.ownerId)
+  print(user.ownerId, end="")
   """
 
 }
@@ -129,7 +129,7 @@ process register_storage_location {
       "bucket": "${bucket}",
   }
   destination = syn.restPOST("/storageLocation", body=json.dumps(destination))
-  print(destination['storageLocationId'])
+  print(destination['storageLocationId'], end="")
   """
 
 }
