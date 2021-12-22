@@ -20,7 +20,7 @@ args = parser.parse_args()
 
 # Log into Synapse with access token or config file
 if args.config is not None:
-    syn = synapseclient.Synapse(configPath=parser.config)
+    syn = synapseclient.Synapse(configPath=args.config)
 else:
     assert os.environ.get("SYNAPSE_AUTH_TOKEN") is not None
     syn = synapseclient.Synapse()
