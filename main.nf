@@ -34,9 +34,7 @@ bucket_name = matches[0][1]
 outdir = params.outdir.replaceAll('(/|[^/])$', '/') // Ensure trailing slash
 ch_synapse_config = params.synapse_config ? Channel.value( file(params.synapse_config) ) : "null"
 
-params.name = false
-run_name = params.name ?: workflow.runName
-publish_dir = "${outdir}${run_name}"
+publish_dir = "${outdir}synindex/${params.parent_id}/"
 
 
 /*

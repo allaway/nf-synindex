@@ -59,4 +59,4 @@ file = synapseclient.File(
     dataFileHandleId=fileHandle["id"],
 )
 file = syn.store(file)
-print(f"{args.uri},{file.id}")
+print(f"{args.uri},{file.id}", end="")
