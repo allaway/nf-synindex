@@ -38,7 +38,7 @@ checksum = hash_md5.hexdigest()
 
 # Create a file handle for an S3 object
 filename = os.path.basename(args.file)
-bucket, key = re.fullmatch(r"s3://([^/]+)/(.*)", args.s3_uri).groups()
+bucket, key = re.fullmatch(r"s3://([^/]+)/(.*)", args.uri).groups()
 fileHandle = {
     "concreteType": "org.sagebionetworks.repo.model.file.S3FileHandle",
     "storageLocationId": args.storage_id,
@@ -59,4 +59,4 @@ file = synapseclient.File(
     dataFileHandleId=fileHandle["id"],
 )
 file = syn.store(file)
-print(f"{args.s3_uri},{file.id}")
+print(f"{args.uri},{file.id}")
