@@ -176,7 +176,7 @@ process synapse_mirror {
   file  syn_config    from ch_synapse_config
 
   output:
-  path  'folder_ids.csv'    into ch_folder_ids_csv
+  path  'parent_ids.csv'    into ch_parent_ids_csv
 
   script:
   config_param = params.synapse_config ? "--config ${syn_config}" : ""
@@ -186,18 +186,18 @@ process synapse_mirror {
   --outdir ${outdir} \
   --parent_id ${parent_id} \
   ${config_param} \
-  > folder_ids.csv
+  > parent_ids.csv
   """
 
 }
 
 
 // Parse list of object URIs and their Synapse parents
-ch_folder_ids_csv
+ch_parent_ids_csv
   .text
   .splitCsv()
   .map { row -> [ row[0], file(row[0]), row[1] ] }
-  .set { ch_folder_ids }
+  .set { ch_parent_ids }
 
 
 process synapse_index {
@@ -209,7 +209,7 @@ process synapse_index {
   afterScript "rm -f ${syn_config}"
 
   input:
-  tuple val(uri), file(object), val(parent_id)    from ch_folder_ids
+  tuple val(uri), file(object), val(parent_id)    from ch_parent_ids
   val   storage_id                                from ch_storage_id
   file  syn_config                                from ch_synapse_config
 
