@@ -34,6 +34,10 @@ bucket_name = matches[0][1]
 outdir = params.outdir.replaceAll('(/|[^/])$', '/') // Ensure trailing slash
 ch_synapse_config = params.synapse_config ? Channel.value( file(params.synapse_config) ) : "null"
 
+params.name = false
+run_name = params.name ?: workflow.runName
+publish_dir = "${outdir}${run_name}"
+
 
 /*
 ========================================================================================
@@ -165,6 +169,8 @@ process synapse_mirror {
 
   afterScript "rm -f ${syn_config}"
 
+  publishDir publish_dir, mode: 'copy'
+
   input:
   path  objects       from ch_objects
   val   outdir        from params.outdir
@@ -186,6 +192,7 @@ process synapse_mirror {
   """
 
 }
+
 
 // Parse list of object URIs and their Synapse parents
 ch_folder_ids_csv
@@ -225,17 +232,5 @@ process synapse_index {
 }
 
 
-process output_file_ids {
-
-  input:
-  val file_ids    from ch_file_ids.collect()
-
-  output:
-  path 'file_ids.csv'     into ch_file_ids_csv
-
-  script:
-  """
-  echo ${file_ids} > file_ids.csv
-  """
-
-}
+ch_file_ids
+  .collectFile(name: "file_ids.txt", storeDir: publish_dir, newLine: true)
