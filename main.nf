@@ -212,11 +212,11 @@ process synapse_index {
   config_param = params.synapse_config ? "--config ${syn_config}" : ""
   """
   synindex.py \
-    --storage_id ${storage_id} \
-    --file ${object} \
-    --uri ${uri} \
-    --parent_id ${parent_id} \
-    ${config_param}
+  --storage_id ${storage_id} \
+  --file ${object} \
+  --uri ${uri} \
+  --parent_id ${parent_id} \
+  ${config_param}
   """
 
 }
