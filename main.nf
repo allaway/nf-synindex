@@ -88,11 +88,11 @@ process update_owner {
   script:
   """
   ( \
-     ( aws s3 cp s3://${bucket}/owner.txt - 2>/dev/null || true ); \
+     ( aws s3 cp 's3://${bucket}/owner.txt' - 2>/dev/null || true ); \
       echo $user_id \
   ) \
   | sort -u \
-  | aws s3 cp - s3://${bucket}/owner.txt
+  | aws s3 cp - 's3://${bucket}/owner.txt'
   """
 
 }
@@ -150,7 +150,7 @@ process list_objects {
 
   script:
   """
-  aws s3 ls ${outdir} --recursive \
+  aws s3 ls '${outdir}' --recursive \
   | grep -v '/\$' \
   | awk '{\$1=\$2=\$3=""; print \$0}' \
   | sed 's|^   |s3://${bucket}/|'
@@ -180,12 +180,12 @@ process synapse_mirror {
   path  'parent_ids.csv'    into ch_parent_ids_csv
 
   script:
-  config_param = params.synapse_config ? "--config ${syn_config}" : ""
+  config_param = params.synapse_config ? "--config '${syn_config}'" : ""
   """
   synmirror.py \
-  --objects ${objects} \
-  --outdir ${outdir} \
-  --parent_id ${parent_id} \
+  --objects '${objects}' \
+  --outdir '${outdir}' \
+  --parent_id '${parent_id}' \
   ${config_param} \
   > parent_ids.csv
   """
@@ -218,13 +218,13 @@ process synapse_index {
   stdout ch_file_ids
 
   script:
-  config_param = params.synapse_config ? "--config ${syn_config}" : ""
+  config_param = params.synapse_config ? "--config '${syn_config}'" : ""
   """
   synindex.py \
-  --storage_id ${storage_id} \
-  --file ${object} \
-  --uri ${uri} \
-  --parent_id ${parent_id} \
+  --storage_id '${storage_id}' \
+  --file '${object}' \
+  --uri '${uri}' \
+  --parent_id '${parent_id}' \
   ${config_param}
   """
 
