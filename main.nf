@@ -152,7 +152,8 @@ process list_objects {
   """
   aws s3 ls ${outdir} --recursive \
   | grep -v '/\$' \
-  | awk 'BEGIN {OFS=""} {\$1=\$2=\$3=""; print "s3://${bucket}/" \$4}' \
+  | awk '{\$1=\$2=\$3=""; print \$0}' \
+  | sed 's|^   |s3://${bucket}/|'
   > objects.txt
   """
   
