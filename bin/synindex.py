@@ -36,8 +36,13 @@ with open(args.file, "rb") as f:
 checksum = hash_md5.hexdigest()
 
 
-# Create a file handle for an S3 object
+# Synapse only handles filenames with: letters, numbers, spaces, underscores,
+# hyphens, periods, plus signs, apostrophes, and parentheses
 filename = os.path.basename(args.file)
+filename = re.sub(r"[^A-Za-z0-9 _.+'()-]", "_", filename)
+
+
+# Create a file handle for an S3 object
 bucket, key = re.fullmatch(r"s3://([^/]+)/(.*)", args.uri).groups()
 fileHandle = {
     "concreteType": "org.sagebionetworks.repo.model.file.S3FileHandle",
@@ -54,7 +59,7 @@ fileHandle = syn.restPOST(
 
 # Expose that file handle on Synapse with a File
 file = synapseclient.File(
-    name=fileHandle["fileName"],
+    name=filename,
     parentId=args.parent_id,
     dataFileHandleId=fileHandle["id"],
 )
