@@ -223,7 +223,7 @@ process synapse_index {
   synindex.py \
   --storage_id ${storage_id} \
   --file ${object} \
-  --uri ${uri} \
+  --uri '${uri}' \
   --parent_id ${parent_id} \
   ${config_param}
   """
