@@ -10,7 +10,7 @@ import synapseclient
 # Parse CLI arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--objects")
-parser.add_argument("--outdir")
+parser.add_argument("--s3_prefix")
 parser.add_argument("--parent_id")
 parser.add_argument("--config")
 args = parser.parse_args()
@@ -37,14 +37,15 @@ def create_folder(name, parent_id):
 
 
 # Iterate over S3 "folders"
-mapping = {args.outdir: args.parent_id}
+s3_prefix = args.s3_prefix.rstrip("/") + "/"
+mapping = {s3_prefix: args.parent_id}
 with open(args.objects, "r") as infile:
     for line in infile:
         object_uri = line.rstrip()
         head, tail = os.path.split(object_uri)
         head += "/"  # Keep trailing slash for consistency
-        relhead = head.replace(args.outdir, "")
-        folder_uri = args.outdir
+        relhead = head.replace(s3_prefix, "")
+        folder_uri = s3_prefix
         for folder in relhead.rstrip("/").split("/"):
             if folder == "":
                 continue

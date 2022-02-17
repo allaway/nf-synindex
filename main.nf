@@ -8,33 +8,36 @@
 */
 
 // Default values
-params.outdir = false
+params.s3_prefix = false
 params.parent_id = false
 params.synapse_config = false
 
-if ( !params.outdir ) {
-  exit 1, "Parameter 'params.outdir' is required!\n"
+if ( !params.s3_prefix ) {
+  exit 1, "Parameter 'params.s3_prefix' is required!\n"
 }
 
 if ( !params.parent_id ) {
   exit 1, "Parameter 'params.parent_id' is required!\n"
 }
 
-matches = ( params.outdir =~ 's3://([^/]+-tower-bucket)/.*[^*]' ).findAll()
+matches = ( params.s3_prefix =~ '^s3://([^/]+)(?:/+([^/]+(?:/+[^/]+)*)/*)?$' ).findAll()
 
 if ( matches.size() == 0 ) {
-  exit 1, "Parameter 'params.outdir' must be an S3 prefix URI for a Tower bucket (e.g., 's3://<stack-name>-tower-bucket)/prefix/to/outdir/')!\n"
+  exit 1, "Parameter 'params.s3_prefix' must be an S3 URI (e.g., 's3://bucket-name/some/prefix/')!\n"
+} else {
+  bucket_name = matches[0][1]
+  base_key = matches[0][2]
+  base_key = base_key ?: '/'
+  s3_prefix = "s3://${bucket_name}/${base_key}"  // Ensuring common format
 }
 
 if ( !params.parent_id ==~ 'syn[0-9]+' ) {
   exit 1, "Parameter 'params.parent_id' must be the Synapse ID of a folder (e.g., 'syn98765432')!\n"
 }
 
-bucket_name = matches[0][1]
-outdir = params.outdir.replaceAll('(/|[^/])$', '/') // Ensure trailing slash
 ch_synapse_config = params.synapse_config ? Channel.value( file(params.synapse_config) ) : "null"
 
-publish_dir = "${outdir}synindex/under-${params.parent_id}/"
+publish_dir = "${s3_prefix}/synindex/under-${params.parent_id}/"
 
 
 /*
@@ -52,23 +55,16 @@ process get_user_id {
   afterScript "rm -f ${syn_config}"
 
   input:
-  file  syn_config    from ch_synapse_config
+  file  syn_config from ch_synapse_config
 
   output:
   stdout ch_user_id
 
   script:
-  syn_params = params.synapse_config ? "configPath='${syn_config}'" : ""
+  config_cli_arg = params.synapse_config ? "--config ${syn_config}" : ""
   """
-  #!/usr/bin/env python3
-
-  import synapseclient
-
-  syn = synapseclient.Synapse(${syn_params})
-  syn.login(silent=True)
-
-  user = syn.getUserProfile()
-  print(user.ownerId, end="")
+  get_user_id.py \
+  ${config_cli_arg}
   """
 
 }
@@ -80,25 +76,25 @@ process update_owner {
 
   input:
   val user_id   from ch_user_id
-  val bucket    from bucket_name
+  val s3_prefix from s3_prefix
 
   output:
-  val true    into ch_update_owner_done
+  val true into ch_update_owner_done
 
   script:
   """
   ( \
-     ( aws s3 cp s3://${bucket}/owner.txt - 2>/dev/null || true ); \
+     ( aws s3 cp ${s3_prefix}/owner.txt - 2>/dev/null || true ); \
       echo $user_id \
   ) \
   | sort -u \
-  | aws s3 cp - s3://${bucket}/owner.txt
+  | aws s3 cp - ${s3_prefix}/owner.txt
   """
 
 }
 
 
-process register_storage_location {
+process register_bucket {
   
   label 'synapse'
 
@@ -107,31 +103,21 @@ process register_storage_location {
   afterScript "rm -f ${syn_config}"
 
   input:
-  val   bucket        from bucket_name
-  file  syn_config    from ch_synapse_config
-  val   flag          from ch_update_owner_done
+  val   bucket     from bucket_name
+  val   base_key   from base_key
+  file  syn_config from ch_synapse_config
+  val   flag       from ch_update_owner_done
 
   output:
   stdout ch_storage_id
 
   script:
-  syn_params = params.synapse_config ? "configPath='${syn_config}'" : ""
+  config_cli_arg = params.synapse_config ? "--config ${syn_config}" : ""
   """
-  #!/usr/bin/env python3
-
-  import json
-  import synapseclient
-  
-  syn = synapseclient.Synapse(${syn_params})
-  syn.login(silent=True)
-
-  destination = {
-      "uploadType": "S3",
-      "concreteType": "org.sagebionetworks.repo.model.project.ExternalS3StorageLocationSetting",
-      "bucket": "${bucket}",
-  }
-  destination = syn.restPOST("/storageLocation", body=json.dumps(destination))
-  print(destination['storageLocationId'], end="")
+  register_bucket.py \
+  --bucket ${bucket} \
+  --base_key ${base_key} \
+  ${config_cli_arg}
   """
 
 }
@@ -142,7 +128,7 @@ process list_objects {
   label 'aws'
 
   input:
-  val outdir    from params.outdir
+  val s3_prefix from s3_prefix
   val bucket    from bucket_name
 
   output:
@@ -150,9 +136,8 @@ process list_objects {
 
   script:
   """
-  aws s3 ls ${outdir} --recursive \
-  | grep -v '/\$' \
-  | grep -v 'synindex/' \
+  aws s3 ls ${s3_prefix} --recursive \
+  | grep -v -e '/\$' -e 'synindex/under-' -e 'owner.txt\$' \
   | awk '{\$1=\$2=\$3=""; print \$0}' \
   | sed 's|^   |s3://${bucket}/|' \
   > objects.txt
@@ -172,22 +157,22 @@ process synapse_mirror {
   publishDir publish_dir, mode: 'copy'
 
   input:
-  path  objects       from ch_objects
-  val   outdir        from params.outdir
-  val   parent_id     from params.parent_id
-  file  syn_config    from ch_synapse_config
+  path  objects    from ch_objects
+  val   s3_prefix  from s3_prefix
+  val   parent_id  from params.parent_id
+  file  syn_config from ch_synapse_config
 
   output:
   path  'parent_ids.csv'    into ch_parent_ids_csv
 
   script:
-  config_param = params.synapse_config ? "--config ${syn_config}" : ""
+  config_cli_arg = params.synapse_config ? "--config ${syn_config}" : ""
   """
   synmirror.py \
   --objects ${objects} \
-  --outdir ${outdir} \
+  --s3_prefix ${s3_prefix} \
   --parent_id ${parent_id} \
-  ${config_param} \
+  ${config_cli_arg} \
   > parent_ids.csv
   """
 
@@ -211,22 +196,22 @@ process synapse_index {
   afterScript "rm -f ${syn_config}"
 
   input:
-  tuple val(uri), file(object), val(parent_id)    from ch_parent_ids
-  val   storage_id                                from ch_storage_id
-  file  syn_config                                from ch_synapse_config
+  tuple val(uri), file(object), val(parent_id) from ch_parent_ids
+  val   storage_id                             from ch_storage_id
+  file  syn_config                             from ch_synapse_config
 
   output:
   stdout ch_file_ids
 
   script:
-  config_param = params.synapse_config ? "--config ${syn_config}" : ""
+  config_cli_arg = params.synapse_config ? "--config ${syn_config}" : ""
   """
   synindex.py \
   --storage_id ${storage_id} \
   --file ${object} \
   --uri '${uri}' \
   --parent_id ${parent_id} \
-  ${config_param}
+  ${config_cli_arg}
   """
 
 }
