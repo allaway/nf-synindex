@@ -137,10 +137,9 @@ process list_objects {
   script:
   """
   aws s3 ls ${s3_prefix} --recursive \
-  | grep -v '/\$' \
-  | grep -v 'synindex/' \
+  | grep -v -e '/\$' -e 'synindex/under-' -e 'owner.txt\$' \
   | awk '{\$1=\$2=\$3=""; print \$0}' \
-  | sed 's|^   |${s3_prefix}/|' \
+  | sed 's|^   |s3://${bucket}/|' \
   > objects.txt
   """
   
