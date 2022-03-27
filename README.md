@@ -2,7 +2,12 @@
 
 ## Purpose
 
-The purpose of this Nextflow workflow is to automate the process of indexing S3 objects in Synapse. These S3 objects are typically the output files from a general-purpose (_e.g._ nf-core) workflow that doesn't contain Synapse-specific steps for uploading or indexing outputs. The benefit of this approach is the lack of data transfer and duplication because the S3 objects remain where they are. This workflow is intended to be run after other data processing workflows.
+The purpose of this Nextflow workflow is to automate the process of indexing S3 objects in Synapse. These S3 objects are typically the output files from a general-purpose (_e.g._ nf-core) workflow that doesn't contain Synapse-specific steps for uploading or indexing outputs. This workflow is intended to be run after other data processing workflows.
+
+The benefits of using this workflows include:
+
+- There is a lack of data transfer and duplication because the S3 objects remain where they are.
+- The folder-like structure in S3 is reproduced in Synapse to maintain the file organization.
 
 Briefly, `nf-synindex` achieves this automation as follows:
 
