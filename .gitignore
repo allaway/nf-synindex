@@ -1,2 +1,7 @@
-.nextflow*
+# Nextflow test files
 work/
+outputs/
+.nextflow*
+
+# IDE files
+.vscode/
