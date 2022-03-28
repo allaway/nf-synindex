@@ -104,10 +104,10 @@ The examples below demonstrate how you would index objects under an S3 prefix in
 
 ## Authentication
 
-Downloading files from Synapse requires the workflow to be authenticated. The workflow currently supports two authentication methods:
+Indexing files from Synapse requires the workflow to be authenticated. The workflow currently supports two authentication methods:
 
 - **(Preferred)** Create a secret called `SYNAPSE_AUTH_TOKEN` containing a Synapse personal access token using the [Nextflow CLI](https://nextflow.io/docs/latest/secrets.html) or [Nextflow Tower](https://help.tower.nf/latest/secrets/overview/).
-- Provide a Synapse configuration file containing a personal access token (see example above) to the `synapse_config` parameter. This method is best used if Nextflow/Tower secrets aren't supported on your platform.
+- Provide a Synapse configuration file containing a personal access token (see example above) to the `synapse_config` parameter. This method is best used if Nextflow/Tower secrets aren't supported on your platform. **Important:** Make sure that your `synapse_config` file is not stored in a directory that will be indexed on or uploaded to Synapse.
 
 You can generate a personal access token using [this dashboard](https://www.synapse.org/#!PersonalAccessTokens:).
 
