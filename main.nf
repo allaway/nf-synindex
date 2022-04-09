@@ -7,6 +7,9 @@
 ========================================================================================
 */
 
+// Ensure DSL1
+nextflow.enable.dsl = 1
+
 // Default values
 params.s3_prefix = false
 params.parent_id = false
