@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The purpose of this Nextflow workflow is to automate the process of indexing S3 objects in Synapse. These S3 objects are typically the output files from a general-purpose (_e.g._ nf-core) workflow that doesn't contain Synapse-specific steps for uploading or indexing outputs. This workflow is intended to be run after other data processing workflows.
+The purpose of this Nextflow workflow is to automate the process of indexing S3 objects in Synapse. These S3 objects are typically the output files from a general-purpose (_e.g._ nf-core) workflow that doesn't contain Synapse-specific steps for uploading or indexing outputs. This workflow is intended to be run after other data processing workflows and assumes that the S3 bucket is [configured](https://help.synapse.org/docs/Custom-Storage-Locations.2048327803.html) for Synapse.
 
 The benefits of using this workflows include:
 
@@ -20,7 +20,7 @@ Briefly, `nf-synindex` achieves this automation as follows:
    3. Expose the file handle as a Synapse file under the corresponding Synapse folder
 5. Output a mapping between the S3 objects and the newly created Synapse files
 
-**N.B.** The workflow assumes that the S3 bucket is [configured](https://help.synapse.org/docs/Custom-Storage-Locations.2048327803.html) for Synapse.
+Relaunching the workflow after some objects under the S3 prefix have been updated will result in those objects being re-indexed. In turn, the corresponding Synapse files will have new versions for these updated objects, but not for the unchanged objects.
 
 ## Quickstart
 
