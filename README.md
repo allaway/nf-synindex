@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The purpose of this Nextflow workflow is to automate the process of indexing S3 objects in Synapse. These S3 objects are typically the output files from a general-purpose (_e.g._ nf-core) workflow that doesn't contain Synapse-specific steps for uploading or indexing outputs. This workflow is intended to be run after other data processing workflows.
+The purpose of this Nextflow workflow is to automate the process of indexing S3 objects in Synapse. These S3 objects are typically the output files from a general-purpose (_e.g._ nf-core) workflow that doesn't contain Synapse-specific steps for uploading or indexing outputs. This workflow is intended to be run after other data processing workflows and assumes that the S3 bucket is [configured](https://help.synapse.org/docs/Custom-Storage-Locations.2048327803.html) for Synapse.
 
 The benefits of using this workflows include:
 
@@ -20,7 +20,7 @@ Briefly, `nf-synindex` achieves this automation as follows:
    3. Expose the file handle as a Synapse file under the corresponding Synapse folder
 5. Output a mapping between the S3 objects and the newly created Synapse files
 
-**N.B.** The workflow assumes that the S3 bucket is [configured](https://help.synapse.org/docs/Custom-Storage-Locations.2048327803.html) for Synapse.
+Relaunching the workflow after some objects under the S3 prefix have been updated will result in those objects being re-indexed. In turn, the corresponding Synapse files will have new versions for these updated objects, but not for the unchanged objects.
 
 ## Quickstart
 
@@ -40,14 +40,9 @@ The examples below demonstrate how you would index objects under an S3 prefix in
     s3://example-bucket/outputs/fastqc/foobar_2_val_2_fastqc.zip
     ```
 
-2. Prepare your Synapse configuration file to authenticate the workflow. For more details, check out the [Authentication](#authentication) section.
+2. Create a user secret called `SYNAPSE_AUTH_TOKEN` in Tower with a [personal access token](https://www.synapse.org/#!PersonalAccessTokens:). For more details, check out the [Authentication](#authentication) section.
 
-    **Example:** Uploaded to `s3://example-bucket/synapse_config.ini`
-
-    ```ini
-    [authentication]
-    authtoken = <personal-access-token>
-    ```
+    **Example:** If using Nextflow Tower hosted by Sage Bionetworks, create a secret [here](https://tower.sagebionetworks.org/secrets).
 
 3. Create a parent Synapse folder that will contain the indexed files and the associated folder structure.
 
@@ -57,14 +52,13 @@ The examples below demonstrate how you would index objects under an S3 prefix in
     synapse create --parentid <project-id> --name <folder-name> Folder
     ```
 
-4. Prepare your parameters file. For more details, check out the [Parameters](#parameters) section.
+4. Prepare your parameters file. For more details, check out the [Parameters](#parameters) section. Only the `s3_prefix` and `parent_id` parameters are required.
 
     **Example:** Stored locally as `./params.yml`
 
     ```yaml
-    s3_prefix: s3://example-bucket/outputs/
-    synapse_config: s3://example-bucket/synapse_config.ini
-    parent_id: syn26601236
+    s3_prefix: "s3://example-bucket/outputs/"
+    parent_id: "syn26601236"
     ```
 
 5. Launch workflow using the [Nextflow CLI](https://nextflow.io/docs/latest/cli.html#run), the [Tower CLI](https://help.tower.nf/latest/cli/), or the [Tower web UI](https://help.tower.nf/latest/launch/launchpad/).
@@ -104,22 +98,24 @@ The examples below demonstrate how you would index objects under an S3 prefix in
 
 ## Authentication
 
-Indexing files from Synapse requires the workflow to be authenticated. The workflow currently supports two authentication methods:
+Indexing files in Synapse requires the workflow to be authenticated. The workflow currently supports two authentication methods:
 
 - **(Preferred)** Create a secret called `SYNAPSE_AUTH_TOKEN` containing a Synapse personal access token using the [Nextflow CLI](https://nextflow.io/docs/latest/secrets.html) or [Nextflow Tower](https://help.tower.nf/latest/secrets/overview/).
 - Provide a Synapse configuration file containing a personal access token (see example above) to the `synapse_config` parameter. This method is best used if Nextflow/Tower secrets aren't supported on your platform. **Important:** Make sure that your `synapse_config` file is not stored in a directory that will be indexed on or uploaded to Synapse.
 
-You can generate a personal access token using [this dashboard](https://www.synapse.org/#!PersonalAccessTokens:).
+### Personal access tokens
+
+You can generate a Synapse personal access token using [this dashboard](https://www.synapse.org/#!PersonalAccessTokens:).
 
 ## Parameters
 
 Check out the [Quickstart](#quickstart) section for example parameter values.
 
-- **`s3_prefix`**: An S3 prefix containing a set of files that need to be indexed in Synapse. Typically, this corresponds to the value given to the `outdir` parameter from an nf-core workflow run.
+- **`s3_prefix`**: (Required) An S3 prefix containing a set of files that need to be indexed in Synapse. Typically, this corresponds to the value given to the `outdir` parameter from an nf-core workflow run.
 
-- **`parent_id`**: The Synapse ID of a Synapse folder that will contain the indexed files and the associated folder structure.
+- **`parent_id`**: (Required) The Synapse ID of a Synapse folder that will contain the indexed files and the associated folder structure.
 
-- **`synapse_config`**: (Optional) A [Synapse configuration file](https://python-docs.synapse.org/build/html/Credentials.html#use-synapseconfig) containing authentication credentials. A minimal example is included in the [Quickstart](#quickstart) section.
+- **`synapse_config`**: (Optional) A [Synapse configuration file](https://python-docs.synapse.org/build/html/Credentials.html#use-synapseconfig) containing authentication credentials. 
 
 ## Known Limitations
 
