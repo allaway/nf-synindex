@@ -141,6 +141,7 @@ process list_objects {
   """
   aws s3 ls ${s3_prefix} --recursive \
   | grep -v -e '/\$' -e 'synindex/under-' -e 'owner.txt\$' \
+    -e 'synapseConfig' -e 'synapse_config' \
   | awk '{\$1=\$2=\$3=""; print \$0}' \
   | sed 's|^   |s3://${bucket}/|' \
   > objects.txt
