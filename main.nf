@@ -53,6 +53,8 @@ process get_user_id {
   
   label 'synapse'
 
+  cache false
+
   secret 'SYNAPSE_AUTH_TOKEN'
 
   afterScript "rm -f ${syn_config}"
