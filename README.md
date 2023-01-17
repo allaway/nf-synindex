@@ -15,7 +15,7 @@ The benefits of using this workflows include:
 
 Nextflow does not compute MD5 checksums for published files. Hence, this workflow must compute these checksums post hoc. Unfortunately, there is no guarantee on the integrity of the file transfer from S3 to the EC2 instances that will compute the checksums. While the risk is minimized by remaining within the AWS network, it remains non-zero. 
 
-If you require high-fidelity MD5 checksums, make a feature request. This could be achieved by downloading each file more than once and ensuring consistency in the computed checksums.
+If you require high-fidelity MD5 checksums, make a feature request. For example, the workflow could download each file more than once and ensure consistency in the computed checksums. This isn't implemented yet.
 
 ### Indexing non-Tower buckets
 
