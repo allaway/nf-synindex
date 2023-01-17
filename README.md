@@ -6,13 +6,34 @@ The purpose of this Nextflow workflow is to automate the process of indexing S3 
 
 The benefits of using this workflows include:
 
-- There is a lack of data transfer and duplication because the S3 objects remain where they are.
+- Data duplication is avoided because the S3 objects remain where they are.
 - The folder-like structure in S3 is reproduced in Synapse to maintain the file organization.
+
+## Notes 
+
+### Caveat with computing MD5 checksums for Nextflow output files
+
+Nextflow does not compute MD5 checksums for published files. Hence, this workflow must compute these checksums post hoc. Unfortunately, there is on guarantee on the integrity of the file transfer from S3 to the EC2 instances that will compute the checksums. While the risk is minimized by remaining within the AWS network, it remains non-zero. 
+
+If you require high-fidelity MD5 checksums, make a feature request. This could be achieved by downloading each file more than once and ensuring consistency in the computed checksums.
+
+### Indexing non-Tower buckets
+
+While this workflow was originally created to enable Synapse indexing in Nextflow Tower, it is generic enough to support all S3 buckets as long as the workflow has permissions to the bucket in question. If you plan on running this workflow in Tower, open a ticket to request for the IAM role ARNs that must be granted access to the target bucket (_e.g._ on the bucket policy).
+
+If you have access to MD5 checksums, you should use those instead of the ones computed by this workflow (for the reason explained in the above caveat). Currently, this workflow doesn't support providing pre-computed MD5 checkums. Feel free to open a feature request if this use case becomes relevant to you.
+
+### Additional Limitations
+
+- The workflow doesn't annotate the Synapse files it creates with any metadata or provenance.
+- The workflow will index all of the objects under the given S3 prefix. There is no way to filter or skip the indexing of certain objects.
+
+## Summary
 
 Briefly, `nf-synindex` achieves this automation as follows:
 
 1. Update the `owner.txt` file with the authenticated user ID
-2. Register the Tower bucket as an external storage location
+2. Register the S3 bucket as an external storage location
 3. Mirror the directory-like structure in S3 as folders on Synapse
 4. For each S3 object, the following steps are performed in parallel:
    1. Compute the MD5 checksum
@@ -116,8 +137,3 @@ Check out the [Quickstart](#quickstart) section for example parameter values.
 - **`parent_id`**: (Required) The Synapse ID of a Synapse folder that will contain the indexed files and the associated folder structure.
 
 - **`synapse_config`**: (Optional) A [Synapse configuration file](https://python-docs.synapse.org/build/html/Credentials.html#use-synapseconfig) containing authentication credentials. 
-
-## Known Limitations
-
-- The workflow doesn't annotate the Synapse files it creates with any metadata or provenance.
-- The workflow will index all of the objects under the given S3 prefix. There is no way to filter or skip the indexing of certain objects.
