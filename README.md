@@ -19,7 +19,7 @@ If you require high-fidelity MD5 checksums, make a feature request. This could b
 
 ### Indexing non-Tower buckets
 
-While this workflow was originally created to enable Synapse indexing in Nextflow Tower, it is generic enough to support all S3 buckets as long as the workflow has permissions to the bucket in question. If you plan on running this workflow in Tower, open a ticket to request for the IAM role ARNs that must be granted access to the target bucket (_e.g._ on the bucket policy).
+While this workflow was originally created to enable Synapse indexing in Nextflow Tower, it is generic enough to support all S3 buckets as long as the workflow has permissions to the bucket in question. If you plan on running this workflow in Tower, open a ticket to request the IAM role ARNs that must be granted access to the target bucket (_e.g._ on the bucket policy).
 
 If you have access to MD5 checksums, you should use those instead of the ones computed by this workflow (for the reason explained in the above caveat). Currently, this workflow doesn't support providing pre-computed MD5 checkums. Feel free to open a feature request if this use case becomes relevant to you.
 
