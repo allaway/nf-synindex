@@ -111,7 +111,6 @@ process register_bucket {
   val   bucket     from bucket_name
   val   base_key   from base_key
   file  syn_config from ch_synapse_config
-  val   flag       from ch_update_owner_done
 
   output:
   stdout ch_storage_id
