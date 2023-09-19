@@ -74,7 +74,7 @@ process get_user_id {
 
 }
 
-
+/*
 process update_owner {
   
   label 'aws'
@@ -97,7 +97,7 @@ process update_owner {
   """
 
 }
-
+*/
 
 process register_bucket {
   
